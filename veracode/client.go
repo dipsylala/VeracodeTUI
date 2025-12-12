@@ -2,7 +2,6 @@ package veracode
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -14,10 +13,8 @@ import (
 
 // Veracode API endpoint URLs
 const (
-	BaseWebURL        = "https://analysiscenter.veracode.com/"
-	BaseAPIURL        = "https://analysiscenter.veracode.com/api"
-	HealthCheckAPIURL = "https://api.veracode.com"
-	AppSecAPIURL      = "https://api.veracode.com"
+	BaseWebURL = "https://analysiscenter.veracode.com/"
+	BaseAPIURL = "https://api.veracode.com"
 )
 
 // HTTPError represents an HTTP error response from the Veracode API
@@ -50,30 +47,10 @@ func NewClient(apiKeyID, apiKeySecret string) *Client {
 	}
 }
 
-// Application represents a Veracode application
-type Application struct {
-	ID           int    `json:"id"`
-	GUID         string `json:"guid"`
-	Name         string `json:"profile_name"`
-	BusinessUnit string `json:"business_unit"`
-	Policy       string `json:"policy"`
-	Teams        string `json:"teams"`
-}
-
-// ApplicationList represents the response from the applications API
-type ApplicationList struct {
-	Applications []Application `json:"_embedded,omitempty"`
-}
-
-// doRequest performs an authenticated HTTP request
-func (c *Client) doRequest(method, urlPath string) ([]byte, error) {
-	return c.doRequestWithBaseURL(method, BaseAPIURL+urlPath)
-}
-
 // DoRequestWithQueryParams performs an authenticated HTTP request with query parameters
 // This is used by the service layer for the new REST APIs
 func (c *Client) DoRequestWithQueryParams(method, urlPath string, params url.Values) ([]byte, error) {
-	fullURL := AppSecAPIURL + urlPath
+	fullURL := BaseAPIURL + urlPath
 	if len(params) > 0 {
 		fullURL += "?" + params.Encode()
 	}
@@ -89,7 +66,7 @@ func (c *Client) DoRequestWithQueryParams(method, urlPath string, params url.Val
 // DoRequestWithBody performs an authenticated HTTP request with a JSON body and query parameters
 // This is used for POST/PUT/PATCH requests that need to send data
 func (c *Client) DoRequestWithBody(method, urlPath string, body []byte, params url.Values) ([]byte, error) {
-	fullURL := AppSecAPIURL + urlPath
+	fullURL := BaseAPIURL + urlPath
 	if len(params) > 0 {
 		fullURL += "?" + params.Encode()
 	}
@@ -216,60 +193,10 @@ func (c *Client) doRequestWithBodyAndBaseURL(method, fullURL string, body []byte
 	return respBody, nil
 }
 
-// GetApplications retrieves all applications from Veracode
-func (c *Client) GetApplications() ([]Application, error) {
-	body, err := c.doRequest("GET", "/5.0/getapplist.do")
-	if err != nil {
-		return nil, err
-	}
-
-	// Parse XML response (Veracode v5 API uses XML)
-	// For now, return empty slice - we'll need to parse XML
-	// or switch to newer JSON-based APIs
-	var apps []Application
-
-	// Try to parse as JSON first (for newer API endpoints)
-	var appList ApplicationList
-	if err := json.Unmarshal(body, &appList); err == nil {
-		return appList.Applications, nil
-	}
-
-	// If JSON parsing fails, we have XML which needs different handling
-	return apps, nil
-}
-
-// GetApplicationByID retrieves a specific application by ID
-func (c *Client) GetApplicationByID(appID int) (*Application, error) {
-	urlPath := fmt.Sprintf("/5.0/getappinfo.do?app_id=%d", appID)
-	body, err := c.doRequest("GET", urlPath)
-	if err != nil {
-		return nil, err
-	}
-
-	var app Application
-	if err := json.Unmarshal(body, &app); err != nil {
-		return nil, fmt.Errorf("failed to parse application info: %w", err)
-	}
-
-	return &app, nil
-}
-
-// GetSandboxes retrieves sandboxes for an application
-func (c *Client) GetSandboxes(appID int) ([]byte, error) {
-	urlPath := fmt.Sprintf("/5.0/getsandboxlist.do?app_id=%d", appID)
-	return c.doRequest("GET", urlPath)
-}
-
-// GetBuilds retrieves builds for an application
-func (c *Client) GetBuilds(appID int) ([]byte, error) {
-	urlPath := fmt.Sprintf("/5.0/getbuildlist.do?app_id=%d", appID)
-	return c.doRequest("GET", urlPath)
-}
-
 // HealthCheck verifies that authentication services are operational
 // Returns nil if successful (200 OK), error otherwise
 func (c *Client) HealthCheck() error {
-	fullURL := HealthCheckAPIURL + "/healthcheck/status"
+	fullURL := BaseAPIURL + "/healthcheck/status"
 	_, err := c.doRequestWithBaseURL("GET", fullURL)
 	return err
 }
