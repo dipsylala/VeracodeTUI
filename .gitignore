@@ -1,0 +1,33 @@
+# Veracode TUI binaries
+veracode-tui
+veracode-tui.exe
+*.log
+
+# Test coverage
+coverage.out
+coverage.html
+*.coverprofile
+*.out
+*.test
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Go workspace file
+go.work
+
+# Environment files
+.env
+.env.local
+
+# Build artifacts
+vendor/
+
+# Configuration (may contain sensitive data)
+.veracode/
+veracode.yml

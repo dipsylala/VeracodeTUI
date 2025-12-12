@@ -1,0 +1,53 @@
+linters:
+  enable:
+    - gofmt
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - gosimple
+    - stylecheck
+    - misspell
+    - unconvert
+    - gocyclo
+    - dupl
+    - goconst
+    - revive
+    - ineffassign
+    - typecheck
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  
+  dupl:
+    threshold: 100
+  
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+        disabled: true
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  
+  exclude-dirs:
+    - vendor
+  
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - dupl
+        - goconst
+
+run:
+  timeout: 5m
