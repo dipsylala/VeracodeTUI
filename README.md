@@ -33,13 +33,32 @@ SCA is covered too
 
 ## Prerequisites
 
+### For End Users (Running Pre-Built Binary)
+
+- A Veracode account with API credentials
+- `~/.veracode/veracode.yml` configuration file
+
+### For Developers (Building from Source)
+
 - Go 1.24 or higher
 - A Veracode account with API credentials
 - `~/.veracode/veracode.yml` configuration file
 
 ## Installation
 
-### 1. Install Go
+### Option 1: Using a Pre-Built Binary (Recommended for End Users)
+
+If you have a pre-built `veracode-tui.exe`, simply:
+
+1. Place the executable in a directory of your choice
+2. Set up your configuration file (see [Configuration](#configuration) section)
+3. Run the application (see [Usage](#usage) section)
+
+**No Go installation required!** The executable is standalone and includes all dependencies.
+
+### Option 2: Building from Source (For Developers)
+
+#### 1. Install Go
 
 If you haven't installed Go yet, download it from [https://golang.org/dl/](https://golang.org/dl/)
 
@@ -48,19 +67,19 @@ For Windows, you can use:
 winget install GoLang.Go
 ```
 
-### 2. Clone or navigate to the repository
+#### 2. Clone or navigate to the repository
 
 ```powershell
 cd E:\Github\veracode-tui
 ```
 
-### 3. Download dependencies
+#### 3. Download dependencies
 
 ```powershell
 go mod download
 ```
 
-### 4. Build the application
+#### 4. Build the application
 
 ```powershell
 go build -o veracode-tui.exe
