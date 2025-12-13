@@ -113,23 +113,31 @@ func (ui *UI) initializeApplicationDetailViews() {
 	ui.appInfoView = tview.NewTextView().
 		SetDynamicColors(true).
 		SetScrollable(true)
-	ui.appInfoView.SetBorder(true).SetTitle(" Application Information ").SetTitleAlign(tview.AlignLeft)
+	ui.appInfoView.SetBorder(true).
+		SetTitle(" Application Information ").
+		SetTitleAlign(tview.AlignLeft)
 
 	ui.complianceView = tview.NewTextView().
 		SetDynamicColors(true).
 		SetScrollable(true)
-	ui.complianceView.SetBorder(true).SetTitle(" Status & Compliance ").SetTitleAlign(tview.AlignLeft)
+	ui.complianceView.SetBorder(true).
+		SetTitle(" Status & Compliance ").
+		SetTitleAlign(tview.AlignLeft)
 
 	ui.recentScansView = tview.NewTextView().
 		SetDynamicColors(true).
 		SetScrollable(true)
-	ui.recentScansView.SetBorder(true).SetTitle(" Recent Scans ").SetTitleAlign(tview.AlignLeft)
+	ui.recentScansView.SetBorder(true).
+		SetTitle(" Recent Scans ").
+		SetTitleAlign(tview.AlignLeft)
 
 	ui.contextsTable = tview.NewTable().
 		SetBorders(false).
 		SetSelectable(true, false).
 		SetFixed(1, 0)
-	ui.contextsTable.SetBorder(true).SetTitle(" Scan Contexts ").SetTitleAlign(tview.AlignLeft).
+	ui.contextsTable.SetBorder(true).
+		SetTitle(" Scan Contexts ").
+		SetTitleAlign(tview.AlignLeft).
 		SetBorderPadding(0, 0, 1, 1)
 	ui.contextsTable.SetSelectedStyle(tcell.StyleDefault.
 		Background(tcell.GetColor(ui.theme.SelectionBackground)).

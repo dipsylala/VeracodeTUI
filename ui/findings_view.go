@@ -76,7 +76,8 @@ func (ui *UI) initializeFindingsView() {
 		SetBorders(false).
 		SetSelectable(true, false).
 		SetFixed(1, 0)
-	ui.findingsTable.SetBorder(true).SetTitleAlign(tview.AlignLeft).
+	ui.findingsTable.SetBorder(true).
+		SetTitleAlign(tview.AlignLeft).
 		SetBorderColor(tcell.GetColor(ui.theme.Border)).
 		SetBorderPadding(0, 0, 1, 1)
 	ui.findingsTable.SetSelectedStyle(tcell.StyleDefault.
