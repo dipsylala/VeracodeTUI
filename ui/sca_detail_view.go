@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/dipsylala/veracode-tui/services/findings"
@@ -258,14 +259,27 @@ func (ui *UI) buildSCACVEDetailsContent(finding *findings.Finding) string {
 	}
 
 	// CVE information
+	var cveName string
 	if cveData, ok := details["cve"].(map[string]interface{}); ok {
-		if cveName, ok := cveData["name"].(string); ok && cveName != "" {
+		if name, ok := cveData["name"].(string); ok && name != "" {
+			cveName = name
 			sb.WriteString(fmt.Sprintf("[%s]CVE:[-] [white]%s[-]\n", ui.theme.Label, cveName))
 		}
 		if cveHref, ok := cveData["href"].(string); ok && cveHref != "" {
 			sb.WriteString(fmt.Sprintf("[%s]Link:[-] [:::%s]%s[:::-]\n",
 				ui.theme.Label, cveHref, cveHref))
 		}
+
+		// Add useful links if CVE name exists
+		if cveName != "" {
+			sb.WriteString(fmt.Sprintf("\n[%s]Useful Links:[-]\n", ui.theme.Label))
+			encodedCVE := url.QueryEscape(cveName)
+			veracodeSearchURL := fmt.Sprintf("https://sca.analysiscenter.veracode.com/vulnerability-database/search#query=%s", encodedCVE)
+			exploitDBSearchURL := fmt.Sprintf("https://www.exploit-db.com/search?cve=%s", encodedCVE)
+			sb.WriteString(fmt.Sprintf("  [:::%s]Veracode SCA[:::-]\n", veracodeSearchURL))
+			sb.WriteString(fmt.Sprintf("  [:::%s]Exploit-DB[:::-]\n", exploitDBSearchURL))
+		}
+
 	}
 	sb.WriteString("\n")
 
