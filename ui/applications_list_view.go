@@ -14,7 +14,6 @@ import (
 func (ui *UI) setupApplicationsView() {
 	// Create all widgets
 	headerWidget := ui.createHeaderWidget()
-	searchWidget := ui.createSearchWidget()
 	filtersWidget := ui.createFiltersWidget()
 	applicationsWidget := ui.createApplicationsTableWidget()
 	statusWidget := ui.createStatusBarWidget()
@@ -23,15 +22,14 @@ func (ui *UI) setupApplicationsView() {
 	shortcutsBar := tview.NewTextView().
 		SetDynamicColors(true).
 		SetTextAlign(tview.AlignCenter).
-		SetText(fmt.Sprintf("[%s]Enter/Double-click[-] Details  [%s]n/s/t/m[-] Filters  [%s]PgDn/PgUp[-] Next/Prev Page  [%s]q/ESC[-] Quit",
+		SetText(fmt.Sprintf("[%s]Enter/Double-click[-] Details  [%s]n/s/t/m/a[-] Filters  [%s]PgDn/PgUp[-] Next/Prev Page  [%s]q/ESC[-] Quit",
 			ui.theme.Info, ui.theme.Info, ui.theme.Info, ui.theme.Info))
 	shortcutsBar.SetBorder(false)
 
-	// Layout: header, search, filters, status bar, table, shortcuts
+	// Layout: header, filters (with all fields on one line), status bar, table, shortcuts
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(headerWidget, 3, 0, false).
-		AddItem(searchWidget, 3, 0, false).
 		AddItem(filtersWidget, 3, 0, false).
 		AddItem(statusWidget, 1, 0, false).
 		AddItem(applicationsWidget, 0, 1, true).
@@ -55,38 +53,39 @@ func (ui *UI) createHeaderWidget() *tview.TextView {
 	return header
 }
 
-func (ui *UI) createSearchWidget() *tview.Flex {
+func (ui *UI) createFiltersWidget() *tview.Flex {
+	// Name search input
 	ui.searchInput = tview.NewInputField().
 		SetFieldWidth(0).
 		SetFieldBackgroundColor(tcell.GetColor(ui.theme.Separator))
 
-	container := tview.NewFlex().
-		AddItem(ui.searchInput, 0, 1, true)
-
-	container.SetBorder(true).
-		SetTitle(" Name (n) ").
-		SetTitleAlign(tview.AlignLeft).
-		SetBorderColor(tcell.GetColor(ui.theme.Border)).
-		SetBorderPadding(0, 0, 1, 1)
-
-	// Set focus handlers on the input field to change the container's border
-	ui.searchInput.SetFocusFunc(func() {
-		container.SetBorderColor(tcell.GetColor(ui.theme.BorderFocused))
-	})
 	ui.searchInput.SetBlurFunc(func() {
-		container.SetBorderColor(tcell.GetColor(ui.theme.Border))
 		// Update search query and trigger search when field loses focus
 		ui.searchQuery = ui.searchInput.GetText()
 		ui.triggerApplicationsSearch()
 	})
 
-	return container
-}
+	// Wrap name input in container with border
+	nameContainer := tview.NewFlex().
+		AddItem(ui.searchInput, 0, 1, false)
+	nameContainer.SetBorder(true).
+		SetTitle(" Name (n) ").
+		SetTitleAlign(tview.AlignLeft).
+		SetBorderColor(tcell.GetColor(ui.theme.Border)).
+		SetBorderPadding(0, 0, 1, 1)
 
-func (ui *UI) createFiltersWidget() *tview.Flex {
+	ui.searchInput.SetFocusFunc(func() {
+		nameContainer.SetBorderColor(tcell.GetColor(ui.theme.BorderFocused))
+	})
+	ui.searchInput.SetBlurFunc(func() {
+		nameContainer.SetBorderColor(tcell.GetColor(ui.theme.Border))
+		// Update search query and trigger search when field loses focus
+		ui.searchQuery = ui.searchInput.GetText()
+		ui.triggerApplicationsSearch()
+	})
+
 	// Scan Status dropdown - matches ApplicationScan.status enum from Swagger spec
 	ui.scanStatusFilter = tview.NewDropDown().
-		SetLabel("▾ ").
 		SetOptions([]string{
 			"All",
 			"PUBLISHED",
@@ -141,7 +140,6 @@ func (ui *UI) createFiltersWidget() *tview.Flex {
 
 	// Scan Type dropdown - matches scan_type query parameter from Swagger spec
 	ui.scanTypeFilter = tview.NewDropDown().
-		SetLabel("▾ ").
 		SetOptions([]string{"All", "STATIC", "DYNAMIC", "MANUAL"}, nil).
 		SetCurrentOption(0).
 		SetFieldWidth(0).
@@ -231,9 +229,10 @@ func (ui *UI) createFiltersWidget() *tview.Flex {
 		ui.triggerApplicationsSearch()
 	})
 
-	// Create horizontal flex with all filters
+	// Create horizontal flex with all filters on one line
 	container := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
+		AddItem(nameContainer, 0, 1, false).
 		AddItem(scanStatusContainer, 0, 1, false).
 		AddItem(scanTypeContainer, 0, 1, false).
 		AddItem(modifiedAfterContainer, 0, 1, false)
@@ -276,6 +275,8 @@ func (ui *UI) createStatusBarWidget() *tview.TextView {
 }
 
 // setupApplicationsInputHandlers configures keyboard input for applications view
+//
+//nolint:gocyclo // Input handling with multiple hotkeys and navigation options, but sequential, not nested
 func (ui *UI) setupApplicationsInputHandlers(flex *tview.Flex) {
 	flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		// Handle Tab/Shift-Tab navigation
