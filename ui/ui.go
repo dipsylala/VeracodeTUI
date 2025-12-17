@@ -45,9 +45,15 @@ type UI struct {
 	currentDataPathsView  *tview.TextView
 
 	// Views - Applications List
-	applicationsTable *tview.Table
-	statusBar         *tview.TextView
-	searchInput       *tview.InputField
+	applicationsTable        *tview.Table
+	statusBar                *tview.TextView
+	searchInput              *tview.InputField
+	scanStatusFilter         *tview.DropDown
+	scanTypeFilter           *tview.DropDown
+	modifiedAfterInput       *tview.InputField
+	scanStatusFilterValue    string
+	scanTypeFilterValue      string
+	modifiedAfterFilterValue string
 
 	// Views - Application Detail
 	detailFlex      *tview.Flex
