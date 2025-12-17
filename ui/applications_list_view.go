@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/dipsylala/veracode-tui/services/applications"
 	"github.com/gdamore/tcell/v2"
@@ -74,6 +75,9 @@ func (ui *UI) createSearchWidget() *tview.Flex {
 	})
 	ui.searchInput.SetBlurFunc(func() {
 		container.SetBorderColor(tcell.GetColor(ui.theme.Border))
+		// Update search query and trigger search when field loses focus
+		ui.searchQuery = ui.searchInput.GetText()
+		ui.triggerApplicationsSearch()
 	})
 
 	return container
@@ -106,9 +110,7 @@ func (ui *UI) createFiltersWidget() *tview.Flex {
 		} else {
 			ui.scanStatusFilterValue = text
 		}
-		ui.currentPage = 0
-		ui.app.SetFocus(ui.applicationsTable)
-		go ui.loadApplications()
+		ui.triggerApplicationsSearch()
 	})
 
 	ui.scanStatusFilter.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -133,6 +135,8 @@ func (ui *UI) createFiltersWidget() *tview.Flex {
 	})
 	ui.scanStatusFilter.SetBlurFunc(func() {
 		scanStatusContainer.SetBorderColor(tcell.GetColor(ui.theme.Border))
+		// Trigger search when field loses focus
+		ui.triggerApplicationsSearch()
 	})
 
 	// Scan Type dropdown - matches scan_type query parameter from Swagger spec
@@ -149,9 +153,7 @@ func (ui *UI) createFiltersWidget() *tview.Flex {
 		} else {
 			ui.scanTypeFilterValue = text
 		}
-		ui.currentPage = 0
-		ui.app.SetFocus(ui.applicationsTable)
-		go ui.loadApplications()
+		ui.triggerApplicationsSearch()
 	})
 
 	ui.scanTypeFilter.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -176,6 +178,8 @@ func (ui *UI) createFiltersWidget() *tview.Flex {
 	})
 	ui.scanTypeFilter.SetBlurFunc(func() {
 		scanTypeContainer.SetBorderColor(tcell.GetColor(ui.theme.Border))
+		// Trigger search when field loses focus
+		ui.triggerApplicationsSearch()
 	})
 
 	// Modified After input field
@@ -186,10 +190,18 @@ func (ui *UI) createFiltersWidget() *tview.Flex {
 
 	ui.modifiedAfterInput.SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter {
-			ui.modifiedAfterFilterValue = ui.modifiedAfterInput.GetText()
-			ui.currentPage = 0
+			dateText := ui.modifiedAfterInput.GetText()
+
+			// Validate date format if not empty
+			if dateText != "" && !ui.isValidDate(dateText) {
+				ui.statusBar.SetText("[red]Invalid date format. Please use yyyy-MM-dd (e.g., 2025-12-17)[-]")
+				// Keep focus on the input field so user can correct the error
+				return
+			}
+
+			ui.modifiedAfterFilterValue = dateText
 			ui.app.SetFocus(ui.applicationsTable)
-			go ui.loadApplications()
+			ui.triggerApplicationsSearch()
 		} else if key == tcell.KeyEscape {
 			ui.app.SetFocus(ui.applicationsTable)
 		}
@@ -209,6 +221,14 @@ func (ui *UI) createFiltersWidget() *tview.Flex {
 	})
 	ui.modifiedAfterInput.SetBlurFunc(func() {
 		modifiedAfterContainer.SetBorderColor(tcell.GetColor(ui.theme.Border))
+		// Validate and trigger search when field loses focus
+		dateText := ui.modifiedAfterInput.GetText()
+		if dateText != "" && !ui.isValidDate(dateText) {
+			ui.statusBar.SetText("[red]Invalid date format. Please use yyyy-MM-dd (e.g., 2025-12-17)[-]")
+			return
+		}
+		ui.modifiedAfterFilterValue = dateText
+		ui.triggerApplicationsSearch()
 	})
 
 	// Create horizontal flex with all filters
@@ -228,7 +248,7 @@ func (ui *UI) createApplicationsTableWidget() *tview.Table {
 		SetFixed(1, 0)
 
 	ui.applicationsTable.SetBorder(true).
-		SetTitle(" Applications ").
+		SetTitle(" Applications (a) ").
 		SetTitleAlign(tview.AlignLeft).
 		SetBorderColor(tcell.GetColor(ui.theme.Border)).
 		SetBorderPadding(0, 0, 1, 1)
@@ -265,7 +285,35 @@ func (ui *UI) setupApplicationsInputHandlers(flex *tview.Flex) {
 			return ui.handleTabNavigation(true)
 		}
 
-		if ui.app.GetFocus() == ui.applicationsTable {
+		currentFocus := ui.app.GetFocus()
+
+		// Handle global hotkeys (but not when typing in input fields)
+		if event.Key() == tcell.KeyRune {
+			// Don't trigger hotkeys when user is typing in an input field
+			if currentFocus == ui.searchInput || currentFocus == ui.modifiedAfterInput {
+				return event
+			}
+
+			switch event.Rune() {
+			case 'a':
+				ui.app.SetFocus(ui.applicationsTable)
+				return nil
+			case 'n':
+				ui.app.SetFocus(ui.searchInput)
+				return nil
+			case 's':
+				ui.app.SetFocus(ui.scanStatusFilter)
+				return nil
+			case 't':
+				ui.app.SetFocus(ui.scanTypeFilter)
+				return nil
+			case 'm':
+				ui.app.SetFocus(ui.modifiedAfterInput)
+				return nil
+			}
+		}
+
+		if currentFocus == ui.applicationsTable {
 			return ui.handleApplicationsTableInput(event)
 		}
 		return event
@@ -300,11 +348,8 @@ func (ui *UI) setupApplicationsInputHandlers(flex *tview.Flex) {
 		switch key {
 		case tcell.KeyEnter:
 			ui.searchQuery = ui.searchInput.GetText()
-			ui.currentPage = 0
 			ui.app.SetFocus(ui.applicationsTable)
-			go func() {
-				ui.loadApplications()
-			}()
+			ui.triggerApplicationsSearch()
 		case tcell.KeyEscape:
 			ui.app.SetFocus(ui.applicationsTable)
 		}
@@ -357,8 +402,17 @@ func (ui *UI) handleApplicationsTableRune(r rune) *tcell.EventKey {
 	case 'm':
 		ui.app.SetFocus(ui.modifiedAfterInput)
 		return nil
+	case 'a':
+		ui.app.SetFocus(ui.applicationsTable)
+		return nil
 	}
 	return nil
+}
+
+// triggerApplicationsSearch triggers a new search with current filter values
+func (ui *UI) triggerApplicationsSearch() {
+	ui.currentPage = 0
+	go ui.loadApplications()
 }
 
 // handleTabNavigation handles Tab and Shift-Tab navigation between fields
@@ -559,4 +613,16 @@ func (ui *UI) updateStatusBar() {
 		statusText += fmt.Sprintf(" • Page %d/%d (Total: %d)", ui.currentPage+1, ui.totalPages, ui.totalApps)
 	}
 	ui.statusBar.SetText(statusText)
+}
+
+// isValidDate validates that the date string matches yyyy-MM-dd format
+func (ui *UI) isValidDate(dateStr string) bool {
+	// Check basic format with regex
+	if len(dateStr) != 10 {
+		return false
+	}
+
+	// Try to parse the date
+	_, err := time.Parse("2006-01-02", dateStr)
+	return err == nil
 }

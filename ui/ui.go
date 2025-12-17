@@ -79,13 +79,13 @@ func NewUI(appService *applications.Service, findingsService *findings.Service, 
 		theme = DefaultTheme()
 	}
 
-	// Set rounded borders globally
-	// Unfocused: single-line rounded corners
-	tview.Borders.TopLeft = '╭'
-	tview.Borders.TopRight = '╮'
-	tview.Borders.BottomLeft = '╰'
-	tview.Borders.BottomRight = '╯'
-	// Focused: double-line square corners (no rounded double-line exists in Unicode)
+	// Set square borders globally
+	// Unfocused: single-line square corners
+	tview.Borders.TopLeft = '┌'
+	tview.Borders.TopRight = '┐'
+	tview.Borders.BottomLeft = '└'
+	tview.Borders.BottomRight = '┘'
+	// Focused: double-line square corners
 	tview.Borders.TopLeftFocus = '╔'
 	tview.Borders.TopRightFocus = '╗'
 	tview.Borders.BottomLeftFocus = '╚'
