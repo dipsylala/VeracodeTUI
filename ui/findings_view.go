@@ -77,6 +77,7 @@ func (ui *UI) initializeFindingsView() {
 		SetSelectable(true, false).
 		SetFixed(1, 0)
 	ui.findingsTable.SetBorder(true).
+		SetTitle(" Findings (f) ").
 		SetTitleAlign(tview.AlignLeft).
 		SetBorderColor(tcell.GetColor(ui.theme.Border)).
 		SetBorderPadding(0, 0, 1, 1)
@@ -96,62 +97,101 @@ func (ui *UI) initializeFindingsView() {
 		SetTextAlign(tview.AlignCenter)
 	ui.findingsTitleView.SetBorder(false)
 
-	// Create filter dropdowns
+	// Create filter dropdowns with individual borders (matching applications list style)
+	// Scan Type dropdown
 	ui.findingsFilter = tview.NewDropDown().
-		SetLabel("Scan Type: ").
 		SetOptions([]string{"STATIC", "DYNAMIC", "SCA"}, nil).
 		SetCurrentOption(0).
-		SetLabelColor(tcell.GetColor(ui.theme.Label)).
+		SetFieldWidth(0).
 		SetFieldTextColor(tcell.GetColor(ui.theme.DropDownText)).
 		SetFieldBackgroundColor(tcell.GetColor(ui.theme.DropDownBackground))
 	ui.findingsFilter.SetListStyles(
 		tcell.StyleDefault.Foreground(tcell.GetColor(ui.theme.DropDownText)).Background(tcell.GetColor(ui.theme.DropDownBackground)),
 		tcell.StyleDefault.Foreground(tcell.GetColor(ui.theme.DropDownSelectedForeground)).Background(tcell.GetColor(ui.theme.DropDownSelectedBackground)))
-	ui.findingsFilter.SetBorder(true).
-		SetBorderColor(tcell.GetColor(ui.theme.Border))
+
+	// Wrap scan type in container with border
+	scanTypeContainer := tview.NewFlex().
+		AddItem(ui.findingsFilter, 0, 1, false)
+	scanTypeContainer.SetBorder(true).
+		SetTitle(" Scan Type (t) ").
+		SetTitleAlign(tview.AlignLeft).
+		SetBorderColor(tcell.GetColor(ui.theme.Border)).
+		SetBorderPadding(0, 0, 1, 1)
+
+	ui.findingsFilter.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEnter {
+			ui.app.SetFocus(ui.findingsFilter)
+		}
+	})
 	ui.findingsFilter.SetFocusFunc(func() {
-		ui.findingsFilter.SetBorderColor(tcell.GetColor(ui.theme.BorderFocused))
+		scanTypeContainer.SetBorderColor(tcell.GetColor(ui.theme.BorderFocused))
 	})
 	ui.findingsFilter.SetBlurFunc(func() {
-		ui.findingsFilter.SetBorderColor(tcell.GetColor(ui.theme.Border))
+		scanTypeContainer.SetBorderColor(tcell.GetColor(ui.theme.Border))
 	})
 
+	// Min Severity dropdown
 	ui.findingsSeverityFilterDropdown = tview.NewDropDown().
-		SetLabel("Min Severity: ").
 		SetOptions([]string{"All", "5-Very High", "4-High", "3-Medium", "2-Low", "1-Very Low"}, nil).
 		SetCurrentOption(0).
-		SetLabelColor(tcell.GetColor(ui.theme.Label)).
+		SetFieldWidth(0).
 		SetFieldTextColor(tcell.GetColor(ui.theme.DropDownText)).
 		SetFieldBackgroundColor(tcell.GetColor(ui.theme.DropDownBackground))
 	ui.findingsSeverityFilterDropdown.SetListStyles(
 		tcell.StyleDefault.Foreground(tcell.GetColor(ui.theme.DropDownText)).Background(tcell.GetColor(ui.theme.DropDownBackground)),
 		tcell.StyleDefault.Foreground(tcell.GetColor(ui.theme.DropDownSelectedForeground)).Background(tcell.GetColor(ui.theme.DropDownSelectedBackground)))
-	ui.findingsSeverityFilterDropdown.SetBorder(true).
-		SetBorderColor(tcell.GetColor(ui.theme.Border))
+
+	// Wrap severity in container with border
+	severityContainer := tview.NewFlex().
+		AddItem(ui.findingsSeverityFilterDropdown, 0, 1, false)
+	severityContainer.SetBorder(true).
+		SetTitle(" Min Severity (s) ").
+		SetTitleAlign(tview.AlignLeft).
+		SetBorderColor(tcell.GetColor(ui.theme.Border)).
+		SetBorderPadding(0, 0, 1, 1)
+
+	ui.findingsSeverityFilterDropdown.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEnter {
+			ui.app.SetFocus(ui.findingsSeverityFilterDropdown)
+		}
+	})
 	ui.findingsSeverityFilterDropdown.SetFocusFunc(func() {
-		ui.findingsSeverityFilterDropdown.SetBorderColor(tcell.GetColor(ui.theme.BorderFocused))
+		severityContainer.SetBorderColor(tcell.GetColor(ui.theme.BorderFocused))
 	})
 	ui.findingsSeverityFilterDropdown.SetBlurFunc(func() {
-		ui.findingsSeverityFilterDropdown.SetBorderColor(tcell.GetColor(ui.theme.Border))
+		severityContainer.SetBorderColor(tcell.GetColor(ui.theme.Border))
 	})
 
+	// Policy dropdown
 	ui.findingsPolicyFilterDropdown = tview.NewDropDown().
-		SetLabel("Policy: ").
 		SetOptions([]string{"All", "Violations", "Non-Violations"}, nil).
 		SetCurrentOption(0).
-		SetLabelColor(tcell.GetColor(ui.theme.Label)).
+		SetFieldWidth(0).
 		SetFieldTextColor(tcell.GetColor(ui.theme.DropDownText)).
 		SetFieldBackgroundColor(tcell.GetColor(ui.theme.DropDownBackground))
 	ui.findingsPolicyFilterDropdown.SetListStyles(
 		tcell.StyleDefault.Foreground(tcell.GetColor(ui.theme.DropDownText)).Background(tcell.GetColor(ui.theme.DropDownBackground)),
 		tcell.StyleDefault.Foreground(tcell.GetColor(ui.theme.DropDownSelectedForeground)).Background(tcell.GetColor(ui.theme.DropDownSelectedBackground)))
-	ui.findingsPolicyFilterDropdown.SetBorder(true).
-		SetBorderColor(tcell.GetColor(ui.theme.Border))
+
+	// Wrap policy in container with border
+	policyContainer := tview.NewFlex().
+		AddItem(ui.findingsPolicyFilterDropdown, 0, 1, false)
+	policyContainer.SetBorder(true).
+		SetTitle(" Policy (p) ").
+		SetTitleAlign(tview.AlignLeft).
+		SetBorderColor(tcell.GetColor(ui.theme.Border)).
+		SetBorderPadding(0, 0, 1, 1)
+
+	ui.findingsPolicyFilterDropdown.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEnter {
+			ui.app.SetFocus(ui.findingsPolicyFilterDropdown)
+		}
+	})
 	ui.findingsPolicyFilterDropdown.SetFocusFunc(func() {
-		ui.findingsPolicyFilterDropdown.SetBorderColor(tcell.GetColor(ui.theme.BorderFocused))
+		policyContainer.SetBorderColor(tcell.GetColor(ui.theme.BorderFocused))
 	})
 	ui.findingsPolicyFilterDropdown.SetBlurFunc(func() {
-		ui.findingsPolicyFilterDropdown.SetBorderColor(tcell.GetColor(ui.theme.Border))
+		policyContainer.SetBorderColor(tcell.GetColor(ui.theme.Border))
 	})
 
 	// Create counts label
@@ -160,18 +200,18 @@ func (ui *UI) initializeFindingsView() {
 		SetTextAlign(tview.AlignLeft)
 	ui.findingsCountsLabel.SetBorder(false)
 
-	// Create flex container for filters and table
+	// Create flex container for filters - all on one line
 	filtersRow := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
-		AddItem(ui.findingsFilter, 22, 0, false).
-		AddItem(ui.findingsSeverityFilterDropdown, 30, 0, false).
-		AddItem(ui.findingsPolicyFilterDropdown, 28, 0, false)
+		AddItem(scanTypeContainer, 0, 1, false).
+		AddItem(severityContainer, 0, 1, false).
+		AddItem(policyContainer, 0, 1, false)
 
 	// Create keyboard shortcuts bar
 	shortcutsBar := tview.NewTextView().
 		SetDynamicColors(true).
 		SetTextAlign(tview.AlignCenter).
-		SetText(fmt.Sprintf("[%s]Enter/Double-click[-] Details  [%s]Tab[-] Filter  [%s]ESC[-] Back  [%s]q[-] Quit",
+		SetText(fmt.Sprintf("[%s]Enter/Double-click[-] Details  [%s]t/s/p/f[-] Filters  [%s]ESC[-] Back  [%s]q[-] Quit",
 			ui.theme.Info, ui.theme.Info, ui.theme.Info, ui.theme.Info))
 	shortcutsBar.SetBorder(false)
 
@@ -222,41 +262,73 @@ func (ui *UI) initializeFindingsView() {
 
 // setupFindingsInputHandlers configures keyboard input for findings view and filters
 //
-//nolint:gocyclo // Input handlers for 4 UI components with multiple key bindings each
+//nolint:gocyclo // Complex input handling with multiple hotkeys and navigation options
 func (ui *UI) setupFindingsInputHandlers() {
-	ui.findingsTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyEscape:
+	// Set up global input capture on the flex container for hotkeys
+	ui.findingsFlex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		// Handle Tab/Shift-Tab navigation
+		if event.Key() == tcell.KeyTab {
+			return ui.handleFindingsTabNavigation(false)
+		} else if event.Key() == tcell.KeyBacktab {
+			return ui.handleFindingsTabNavigation(true)
+		}
+
+		// Handle global hotkeys
+		if event.Key() == tcell.KeyRune {
+			switch event.Rune() {
+			case 'q':
+				ui.app.Stop()
+				return nil
+			case 'f':
+				ui.app.SetFocus(ui.findingsTable)
+				return nil
+			case 't':
+				ui.app.SetFocus(ui.findingsFilter)
+				return nil
+			case 's':
+				ui.app.SetFocus(ui.findingsSeverityFilterDropdown)
+				return nil
+			case 'p':
+				ui.app.SetFocus(ui.findingsPolicyFilterDropdown)
+				return nil
+			}
+		}
+
+		// Handle Escape to go back
+		if event.Key() == tcell.KeyEscape {
 			ui.pages.SwitchToPage("detail")
 			ui.app.SetFocus(ui.contextsTable)
 			return nil
-		case tcell.KeyTab:
-			ui.app.SetFocus(ui.findingsFilter)
-			return nil
-		case tcell.KeyBacktab:
-			ui.app.SetFocus(ui.findingsPolicyFilterDropdown)
-			return nil
-		case tcell.KeyRune:
-			if event.Rune() == 'q' {
-				ui.app.Stop()
-				return nil
-			} else if event.Rune() == 'f' {
-				ui.app.SetFocus(ui.findingsFilter)
+		}
+
+		return event
+	})
+
+	// Table-specific handlers
+	ui.findingsTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEnter {
+			row, _ := ui.findingsTable.GetSelection()
+			// For SCA, handle expand/collapse of component groups
+			if ui.findingsScanFilter == findings.ScanFilterSCA {
+				ui.handleSCARowSelection(row)
 				return nil
 			}
+			if row > 0 && row-1 < len(ui.findings) {
+				ui.selectedFinding = &ui.findings[row-1]
+				if ui.selectedFinding.ScanType == findings.ScanTypeSCA {
+					ui.showSCAFindingDetail()
+				} else {
+					ui.showFindingDetail()
+				}
+			}
+			return nil
 		}
 		return event
 	})
 
+	// Dropdown escape handlers
 	ui.findingsFilter.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyEscape:
-			ui.app.SetFocus(ui.findingsTable)
-			return nil
-		case tcell.KeyTab:
-			ui.app.SetFocus(ui.findingsSeverityFilterDropdown)
-			return nil
-		case tcell.KeyBacktab:
+		if event.Key() == tcell.KeyEscape {
 			ui.app.SetFocus(ui.findingsTable)
 			return nil
 		}
@@ -264,34 +336,61 @@ func (ui *UI) setupFindingsInputHandlers() {
 	})
 
 	ui.findingsSeverityFilterDropdown.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyEscape:
+		if event.Key() == tcell.KeyEscape {
 			ui.app.SetFocus(ui.findingsTable)
-			return nil
-		case tcell.KeyTab:
-			ui.app.SetFocus(ui.findingsPolicyFilterDropdown)
-			return nil
-		case tcell.KeyBacktab:
-			ui.app.SetFocus(ui.findingsFilter)
 			return nil
 		}
 		return event
 	})
 
 	ui.findingsPolicyFilterDropdown.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyEscape:
+		if event.Key() == tcell.KeyEscape {
 			ui.app.SetFocus(ui.findingsTable)
-			return nil
-		case tcell.KeyTab:
-			ui.app.SetFocus(ui.findingsTable)
-			return nil
-		case tcell.KeyBacktab:
-			ui.app.SetFocus(ui.findingsSeverityFilterDropdown)
 			return nil
 		}
 		return event
 	})
+}
+
+// handleFindingsTabNavigation handles Tab and Shift-Tab navigation between fields
+func (ui *UI) handleFindingsTabNavigation(reverse bool) *tcell.EventKey {
+	focusables := []tview.Primitive{
+		ui.findingsFilter,
+		ui.findingsSeverityFilterDropdown,
+		ui.findingsPolicyFilterDropdown,
+		ui.findingsTable,
+	}
+
+	currentFocus := ui.app.GetFocus()
+	currentIndex := -1
+
+	// Find current focus index
+	for i, f := range focusables {
+		if f == currentFocus {
+			currentIndex = i
+			break
+		}
+	}
+
+	// Calculate next index
+	var nextIndex int
+	if reverse {
+		// Shift-Tab: go backwards
+		nextIndex = currentIndex - 1
+		if nextIndex < 0 {
+			nextIndex = len(focusables) - 1
+		}
+	} else {
+		// Tab: go forwards
+		nextIndex = currentIndex + 1
+		if nextIndex >= len(focusables) {
+			nextIndex = 0
+		}
+	}
+
+	// Set focus to next element
+	ui.app.SetFocus(focusables[nextIndex])
+	return nil
 }
 
 // setupFindingsFilterCallbacks configures the filter change callbacks

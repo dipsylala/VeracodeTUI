@@ -29,5 +29,5 @@ go.work
 vendor/
 
 # Configuration (may contain sensitive data)
-.veracode/
+.veracode*/
 veracode.yml
