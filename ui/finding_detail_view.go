@@ -146,7 +146,7 @@ func (ui *UI) createFindingDetailViews(appName, contextName string) *findingDeta
 		SetScrollable(false).
 		SetWordWrap(true)
 	views.leftView.SetBorder(true).
-		SetTitle(" Basic Information & Policy ").
+		SetTitle(" Basic Information ").
 		SetTitleAlign(tview.AlignLeft).
 		SetBorderColor(tcell.GetColor(ui.theme.Border))
 	views.leftView.SetFocusFunc(func() {
@@ -348,7 +348,7 @@ func (ui *UI) handleDataPathNavigation(direction int) {
 func (ui *UI) buildBasicInfoContent(finding *findings.Finding) string {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("[%s]Issue ID:[-] [white]%d[-]\n", ui.theme.Label, finding.IssueID))
+	sb.WriteString(fmt.Sprintf("[%s]Flaw ID:[-] [white]%d[-]\n", ui.theme.Label, finding.IssueID))
 	sb.WriteString(fmt.Sprintf("[%s]Scan Type:[-] [white]%s[-]\n", ui.theme.Label, finding.ScanType))
 
 	ui.appendCWEAndSeverity(&sb, finding)
@@ -360,13 +360,11 @@ func (ui *UI) buildBasicInfoContent(finding *findings.Finding) string {
 
 	// Grace period expiration date
 	if finding.GracePeriodExpiresDate != nil {
-		sb.WriteString(fmt.Sprintf("[%s]Grace Period Expires:[-] [white]%s[-]\n\n", ui.theme.Label,
+		sb.WriteString(fmt.Sprintf("[%s]Grace Period Expires:[-] [white]%s[-]\n", ui.theme.Label,
 			finding.GracePeriodExpiresDate.Format("2006-01-02")))
 	} else {
-		sb.WriteString(fmt.Sprintf("[%s]Grace Period Expires:[-] [white]%s[-]\n\n", ui.theme.Label, TextNotAvailable))
+		sb.WriteString(fmt.Sprintf("[%s]Grace Period Expires:[-] [white]%s[-]\n", ui.theme.Label, TextNotAvailable))
 	}
-
-	ui.appendPolicyInfo(&sb, finding)
 
 	return sb.String()
 }
@@ -467,6 +465,10 @@ func (ui *UI) buildFindingStatusContent(finding *findings.Finding) string {
 	if finding.FindingStatus.New {
 		sb.WriteString(fmt.Sprintf("[%s]New Finding:[-] [yellow]Yes[-]\n", ui.theme.Label))
 	}
+
+	// Add blank line before policy info
+	sb.WriteString("\n")
+	ui.appendPolicyInfo(&sb, finding)
 
 	return sb.String()
 }
