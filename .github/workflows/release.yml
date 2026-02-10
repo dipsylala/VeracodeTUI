@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0, v1.2.3, etc.
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+
+      - name: Create dist directory
+        run: mkdir -p dist
+
+      - name: Build for Windows (amd64)
+        run: |
+          GOOS=windows GOARCH=amd64 go build -o dist/veracode-tui-windows-amd64.exe -ldflags="-s -w -X main.Version=${{ steps.version.outputs.VERSION }}" .
+          
+      - name: Build for Windows (arm64)
+        run: |
+          GOOS=windows GOARCH=arm64 go build -o dist/veracode-tui-windows-arm64.exe -ldflags="-s -w -X main.Version=${{ steps.version.outputs.VERSION }}" .
+
+      - name: Build for Linux (amd64)
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o dist/veracode-tui-linux-amd64 -ldflags="-s -w -X main.Version=${{ steps.version.outputs.VERSION }}" .
+          
+      - name: Build for Linux (arm64)
+        run: |
+          GOOS=linux GOARCH=arm64 go build -o dist/veracode-tui-linux-arm64 -ldflags="-s -w -X main.Version=${{ steps.version.outputs.VERSION }}" .
+
+      - name: Build for macOS (amd64 - Intel)
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -o dist/veracode-tui-darwin-amd64 -ldflags="-s -w -X main.Version=${{ steps.version.outputs.VERSION }}" .
+          
+      - name: Build for macOS (arm64 - Apple Silicon)
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -o dist/veracode-tui-darwin-arm64 -ldflags="-s -w -X main.Version=${{ steps.version.outputs.VERSION }}" .
+
+      - name: Create checksums
+        run: |
+          cd dist
+          sha256sum * > checksums.txt
+          cat checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            dist/veracode-tui-windows-amd64.exe
+            dist/veracode-tui-windows-arm64.exe
+            dist/veracode-tui-linux-amd64
+            dist/veracode-tui-linux-arm64
+            dist/veracode-tui-darwin-amd64
+            dist/veracode-tui-darwin-arm64
+            dist/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
